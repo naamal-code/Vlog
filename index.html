@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Vlog</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #6b7280;
+      --line: #d8dce2;
+      --main: #222222;
+      --accent: #3b82f6;
+      --danger: #dc2626;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app-header {
+      padding: 18px 16px;
+      background: var(--main);
+      color: white;
+    }
+
+    .app-header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .app-header p {
+      margin: 6px 0 0;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .wrap {
+      width: min(920px, 100%);
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .card {
+      margin-bottom: 16px;
+      padding: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .share-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .share-id {
+      overflow-wrap: anywhere;
+      padding: 10px 12px;
+      background: #f3f4f6;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-weight: 800;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--main);
+      border-radius: 10px;
+      padding: 10px 14px;
+      background: var(--main);
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: white;
+      color: var(--main);
+    }
+
+    button.danger {
+      border-color: var(--danger);
+      background: var(--danger);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    input[type="file"],
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #aeb4bd;
+      border-radius: 10px;
+      background: white;
+      color: var(--text);
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .help {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .progress-wrap {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .progress-wrap.active { display: block; }
+
+    progress {
+      width: 100%;
+      height: 18px;
+    }
+
+    .status {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .post-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .post-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: white;
+    }
+
+    .post-card video {
+      display: block;
+      width: 100%;
+      max-height: 520px;
+      background: #111;
+    }
+
+    .post-body {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .post-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .post-date {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .post-note {
+      margin: 0;
+      color: #374151;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .empty {
+      padding: 24px 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 620px) {
+      .share-row {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="app-header">
+    <h1>My Vlog</h1>
+    <p>スマホで撮影した動画をアップロードして、投稿日つきで保存・一覧表示する個人Vlogアプリです。</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>共有ID</h2>
+      <div class="share-row">
+        <div id="shareIdLabel" class="share-id">読み込み中...</div>
+        <button id="copyUrlBtn" type="button" class="secondary">共有URLをコピー</button>
+      </div>
+      <p class="help">URL末尾の # 以降が共有IDです。同じURLを開くと同じVlog一覧を表示します。</p>
+    </section>
+
+    <section class="card">
+      <h2>動画を投稿</h2>
+      <div class="form-grid">
+        <div>
+          <label for="videoFile">動画ファイル</label>
+          <input id="videoFile" type="file" accept="video/*" />
+          <p class="help">動画はスマホのカメラロールから選択してください。長い動画はアップロードに時間がかかります。</p>
+        </div>
+
+        <div>
+          <label for="postTitle">タイトル</label>
+          <input id="postTitle" type="text" placeholder="例：今日の散歩" autocomplete="off" />
+        </div>
+
+        <div>
+          <label for="postNote">メモ</label>
+          <textarea id="postNote" placeholder="任意でメモを入力"></textarea>
+        </div>
+
+        <button id="uploadBtn" type="button">アップロードして投稿</button>
+      </div>
+
+      <div id="progressWrap" class="progress-wrap">
+        <progress id="uploadProgress" max="100" value="0"></progress>
+        <div id="uploadStatus" class="status">待機中...</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>投稿動画一覧</h2>
+      <div id="postList" class="post-list">
+        <div class="empty">読み込み中...</div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { Client, Databases, Storage, ID, Query } from "https://cdn.jsdelivr.net/npm/appwrite@17.0.2/+esm";
+
+    /*
+      Appwrite Consoleで取得した値に置き換えてください。
+
+      必要なもの：
+      1. Project ID
+      2. API Endpoint 例：https://cloud.appwrite.io/v1 または https://<REGION>.cloud.appwrite.io/v1
+      3. Database ID
+      4. Collection ID
+      5. Bucket ID
+
+      Collectionに作る属性：
+      - vlogId: string, size 64, required
+      - title: string, size 200, required
+      - note: string, size 2000, requiredではない
+      - fileName: string, size 300, required
+      - size: integer, required
+      - contentType: string, size 100, required
+      - fileId: string, size 64, required
+      - createdAt: string, size 40, required
+
+      権限の試作用設定：
+      - Collection: Any に Create / Read / Update / Delete
+      - Bucket: Any に Create / Read / Update / Delete
+    */
+    const appwriteConfig = {
+      endpoint: "https://nyc.cloud.appwrite.io/v1",
+      projectId: "6a256cfe0021f22a91ae",
+      projectName: "Vlog",
+      databaseId: "6a256fd9001d0d7570d0",
+
+      collectionId: "posts",
+      bucketId: "vlogbucket"
+    };
+
+    const shareIdLabel = document.getElementById("shareIdLabel");
+    const copyUrlBtn = document.getElementById("copyUrlBtn");
+    const videoFile = document.getElementById("videoFile");
+    const postTitle = document.getElementById("postTitle");
+    const postNote = document.getElementById("postNote");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const progressWrap = document.getElementById("progressWrap");
+    const uploadProgress = document.getElementById("uploadProgress");
+    const uploadStatus = document.getElementById("uploadStatus");
+    const postList = document.getElementById("postList");
+
+    const vlogId = getOrCreateVlogId();
+    shareIdLabel.textContent = vlogId;
+
+    let client = null;
+    let databases = null;
+    let storage = null;
+    let appwriteReady = false;
+
+    try {
+      const missingValues = Object.entries(appwriteConfig)
+        .filter(([, value]) => !value || value.startsWith("YOUR_"))
+        .map(([key]) => key);
+
+      if (missingValues.length > 0) {
+        throw new Error(`Appwrite設定が未入力です：${missingValues.join(", ")}`);
+      }
+
+      client = new Client()
+        .setEndpoint(appwriteConfig.endpoint)
+        .setProject(appwriteConfig.projectId);
+
+      databases = new Databases(client);
+      storage = new Storage(client);
+      appwriteReady = true;
+      uploadStatus.textContent = "Appwriteに接続しました。動画を選択して投稿できます。";
+    } catch (error) {
+      console.error("Appwrite初期化エラー", error);
+      uploadBtn.disabled = true;
+      uploadStatus.textContent = `Appwrite初期化に失敗しました：${error.message}`;
+      progressWrap.classList.add("active");
+    }
+
+    if (appwriteReady) {
+      loadPosts();
+    } else {
+      postList.innerHTML = "<div class=\"empty\">Appwriteに接続できていません。</div>";
+    }
+
+    copyUrlBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        alert("共有URLをコピーしました");
+      } catch {
+        prompt("このURLをコピーしてください", location.href);
+      }
+    });
+
+    uploadBtn.addEventListener("click", async () => {
+      if (!appwriteReady) {
+        alert("Appwriteに接続できていません。appwriteConfigを確認してください。");
+        return;
+      }
+
+      const file = videoFile.files?.[0];
+
+      if (!file) {
+        alert("動画ファイルを選択してください。");
+        return;
+      }
+
+      if (!file.type.startsWith("video/")) {
+        alert("動画ファイルを選択してください。");
+        return;
+      }
+
+      uploadBtn.disabled = true;
+      progressWrap.classList.add("active");
+      uploadProgress.removeAttribute("value");
+      uploadStatus.textContent = "アップロード中...";
+
+      let uploadedFile = null;
+
+      try {
+        uploadedFile = await storage.createFile({
+          bucketId: appwriteConfig.bucketId,
+          fileId: ID.unique(),
+          file
+        });
+
+        uploadProgress.value = 80;
+        uploadStatus.textContent = "投稿情報を保存中...";
+
+        const createdAt = new Date().toISOString();
+
+        await databases.createDocument({
+          databaseId: appwriteConfig.databaseId,
+          collectionId: appwriteConfig.collectionId,
+          documentId: ID.unique(),
+          data: {
+            vlogId,
+            title: postTitle.value.trim() || "無題のVlog",
+            note: postNote.value.trim(),
+            fileName: file.name,
+            size: file.size,
+            contentType: file.type,
+            fileId: uploadedFile.$id,
+            createdAt
+          }
+        });
+
+        videoFile.value = "";
+        postTitle.value = "";
+        postNote.value = "";
+        uploadProgress.value = 100;
+        uploadStatus.textContent = "投稿が完了しました。";
+        await loadPosts();
+      } catch (error) {
+        console.error("Appwriteアップロード/保存エラー", error);
+
+        if (uploadedFile?.$id) {
+          try {
+            await storage.deleteFile({
+              bucketId: appwriteConfig.bucketId,
+              fileId: uploadedFile.$id
+            });
+          } catch (deleteError) {
+            console.warn("投稿情報保存失敗後のファイル削除にも失敗しました", deleteError);
+          }
+        }
+
+        uploadStatus.textContent = `失敗しました：${formatAppwriteError(error)}`;
+        alert(`失敗しました：${formatAppwriteError(error)}`);
+      } finally {
+        uploadBtn.disabled = false;
+        if (!uploadProgress.hasAttribute("value")) {
+          uploadProgress.value = 0;
+        }
+      }
+    });
+
+    async function loadPosts() {
+      postList.innerHTML = "<div class=\"empty\">読み込み中...</div>";
+
+      try {
+        let documents = [];
+
+        try {
+          const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId,
+            collectionId: appwriteConfig.collectionId,
+            queries: [
+              Query.equal("vlogId", vlogId),
+              Query.limit(100)
+            ]
+          });
+
+          documents = response.documents;
+        } catch (queryError) {
+          console.warn("vlogIdクエリに失敗したため、全件取得してブラウザ側で絞り込みます。", queryError);
+
+          const response = await databases.listDocuments({
+            databaseId: appwriteConfig.databaseId,
+            collectionId: appwriteConfig.collectionId,
+            queries: [Query.limit(100)]
+          });
+
+          documents = response.documents.filter((post) => post.vlogId === vlogId);
+        }
+
+        documents.sort((a, b) => {
+          return new Date(b.createdAt || b.$createdAt).getTime() - new Date(a.createdAt || a.$createdAt).getTime();
+        });
+
+        postList.innerHTML = "";
+
+        if (documents.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = "まだ投稿がありません。";
+          postList.appendChild(empty);
+          return;
+        }
+
+        documents.forEach((post) => renderPost(post));
+      } catch (error) {
+        console.error("投稿一覧の読み込みエラー", error);
+        postList.innerHTML = `<div class=\"empty\">投稿一覧の読み込みに失敗しました：${escapeHtml(formatAppwriteError(error))}</div>`;
+      }
+    }
+
+    function renderPost(post) {
+      const article = document.createElement("article");
+      article.className = "post-card";
+
+      const video = document.createElement("video");
+      video.controls = true;
+      video.preload = "metadata";
+      video.src = String(storage.getFileView({
+        bucketId: appwriteConfig.bucketId,
+        fileId: post.fileId
+      }));
+
+      const body = document.createElement("div");
+      body.className = "post-body";
+
+      const title = document.createElement("h3");
+      title.className = "post-title";
+      title.textContent = post.title || "無題のVlog";
+
+      const date = document.createElement("div");
+      date.className = "post-date";
+      date.textContent = `投稿日：${formatCreatedAt(post.createdAt || post.$createdAt)}`;
+
+      const note = document.createElement("p");
+      note.className = "post-note";
+      note.textContent = post.note || "";
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "danger";
+      deleteBtn.textContent = "この投稿を削除";
+      deleteBtn.addEventListener("click", async () => {
+        const ok = confirm("この投稿を削除しますか？動画ファイルも削除されます。");
+        if (!ok) return;
+
+        try {
+          if (post.fileId) {
+            await storage.deleteFile({
+              bucketId: appwriteConfig.bucketId,
+              fileId: post.fileId
+            });
+          }
+
+          await databases.deleteDocument({
+            databaseId: appwriteConfig.databaseId,
+            collectionId: appwriteConfig.collectionId,
+            documentId: post.$id
+          });
+
+          await loadPosts();
+        } catch (error) {
+          console.error("削除エラー", error);
+          alert(`削除に失敗しました：${formatAppwriteError(error)}`);
+        }
+      });
+
+      body.appendChild(title);
+      body.appendChild(date);
+      if (post.note) body.appendChild(note);
+      body.appendChild(deleteBtn);
+
+      article.appendChild(video);
+      article.appendChild(body);
+      postList.appendChild(article);
+    }
+
+    function formatCreatedAt(createdAt) {
+      if (!createdAt) return "保存中...";
+
+      const date = new Date(createdAt);
+      if (Number.isNaN(date.getTime())) return "日付不明";
+
+      return new Intl.DateTimeFormat("ja-JP", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(date);
+    }
+
+    function getOrCreateVlogId() {
+      const hash = location.hash.replace("#", "").trim();
+
+      if (hash) return hash;
+
+      const newId = crypto.randomUUID().slice(0, 8);
+      location.hash = newId;
+      return newId;
+    }
+
+    function formatAppwriteError(error) {
+      const code = error?.code ? `code ${error.code}` : "";
+      const type = error?.type ? ` / ${error.type}` : "";
+      const message = error?.message || "Appwrite設定、権限、Database/Collection/Bucket IDを確認してください。";
+      return `${code}${type} ${message}`.trim();
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>
